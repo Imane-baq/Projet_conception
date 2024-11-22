@@ -2,6 +2,7 @@ import pygame
 import random
 from collections import deque
 import time
+import serial
  
 # Initialize pygame
 pygame.init()
@@ -16,6 +17,16 @@ PLAYER_COLOR = (30, 144, 255)  # Dodger Blue for the player
 TRACE_COLOR = (173, 216, 230)  # Light Blue for AI trace
 GOAL_COLOR = (220, 20, 60)  # Crimson for the goal
 GUIDE_COLOR = (255, 215, 0)  # Gold for the guide AI
+
+
+# ser = serial.Serial(
+#     port='/dev/ttyS0',  # Replace with your port, e.g., 'COM3' for Windows
+#     baudrate=115200,    # Match the baud rate of your UART device
+#     bytesize=serial.EIGHTBITS,
+#     parity=serial.PARITY_NONE,
+#     stopbits=serial.STOPBITS_ONE,
+#     timeout=1           # Optional: Timeout for read operations
+# )
 
  
 # Function to generate the maze with a path
@@ -105,6 +116,26 @@ def move_guide(guide_pos, path):
         if next_index < len(path):
             return path[next_index]
     return guide_pos
+
+def send_maze(maze, player_pos, path):
+    for index_ligne, val_ligne in enumerate(maze):
+        for index_colonne, val_colonne in enumerate(val_ligne):
+            maze_pos = tuple(index_ligne, index_colonne)
+            if(maze_pos == player_pos):
+                ser.write(bytes('X'))
+            elif(check_Ai_Path(maze_pos, path)):
+                ser.write(bytes('P'))
+            elif(val_colonne == '#'):
+                ser.write(bytes(val_colonne))
+            elif(val_colonne == ' '):
+                ser.write(bytes('0'))
+        ser.write('N')
+
+def check_Ai_Path(maze_pos, path):
+    for i in path:
+        if(maze_pos == i):
+            return True
+    return False
  
 # Main game function
 def main():
