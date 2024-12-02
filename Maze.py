@@ -17,8 +17,9 @@ PLAYER_COLOR = (30, 144, 255)  # Dodger Blue for the player
 TRACE_COLOR = (173, 216, 230)  # Light Blue for AI trace
 GOAL_COLOR = (220, 20, 60)  # Crimson for the goal
 GUIDE_COLOR = (255, 215, 0)  # Gold for the guide AI
-
-
+NUMERO_COM = "3"
+ 
+ 
 # ser = serial.Serial(
 #     port='/dev/ttyS0',  # Replace with your port, e.g., 'COM3' for Windows
 #     baudrate=115200,    # Match the baud rate of your UART device
@@ -27,12 +28,12 @@ GUIDE_COLOR = (255, 215, 0)  # Gold for the guide AI
 #     stopbits=serial.STOPBITS_ONE,
 #     timeout=1           # Optional: Timeout for read operations
 # )
-
+ 
  
 # Function to generate the maze with a path
 def generate_maze(width, height):
     maze = [['#' for _ in range(2 * width + 1)] for _ in range(2 * height + 1)]
-    
+   
     def carve_passages(x, y):
         directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
         random.shuffle(directions)
@@ -90,7 +91,7 @@ def draw_maze(window, maze, player_pos, guide_pos, path, goal_pos):
  
     # Draw guide AI
     pygame.draw.rect(window, GUIDE_COLOR, (guide_pos[0] * CELL_SIZE, guide_pos[1] * CELL_SIZE, CELL_SIZE, CELL_SIZE))
-    
+   
     # Draw goal
     pygame.draw.rect(window, GOAL_COLOR, (goal_pos[0] * CELL_SIZE, goal_pos[1] * CELL_SIZE, CELL_SIZE, CELL_SIZE))
  
@@ -116,21 +117,21 @@ def move_guide(guide_pos, path):
         if next_index < len(path):
             return path[next_index]
     return guide_pos
-
-def send_maze(maze, player_pos, path):
+ 
+def send_maze(maze, player_pos, path, ser):
     for index_ligne, val_ligne in enumerate(maze):
         for index_colonne, val_colonne in enumerate(val_ligne):
-            maze_pos = tuple(index_ligne, index_colonne)
+            maze_pos = (index_ligne, index_colonne)
             if(maze_pos == player_pos):
-                ser.write(bytes('X'))
+                ser.write('X'.encode("utf-8"))
             elif(check_Ai_Path(maze_pos, path)):
-                ser.write(bytes('P'))
+                ser.write('P'.encode("utf-8"))
             elif(val_colonne == '#'):
-                ser.write(bytes(val_colonne))
+                ser.write("M".encode("utf-8"))
             elif(val_colonne == ' '):
-                ser.write(bytes('0'))
-        ser.write('N')
-
+                ser.write('0'.encode("utf-8"))
+        ser.write('N'.encode("utf-8"))
+ 
 def check_Ai_Path(maze_pos, path):
     for i in path:
         if(maze_pos == i):
@@ -144,8 +145,10 @@ def main():
     pygame.display.set_caption("Maze Game with Guide AI")
  
     # Initialize maze parameters
-    maze_width = random.randint(5, 7)  # Smaller width for a more compact maze
-    maze_height = random.randint(5, 6)  # Smaller height for a more compact maze
+    #maze_width = random.randint(5, 7)  # Smaller width for a more compact maze
+    #maze_height = random.randint(5, 6)  # Smaller height for a more compact maze
+    maze_width = 4
+    maze_height = 3
     maze = generate_maze(maze_width, maze_height)
     start, goal = (1, 1), (2 * maze_width - 1, 2 * maze_height - 1)
  
@@ -158,11 +161,20 @@ def main():
     path_index = 0
     last_move_time = time.time()
     last_distance = manhattan_distance(player_pos, goal)
-    
+ 
+    ser = serial.Serial(
+        port = 'COM' + NUMERO_COM,
+        baudrate=19200,
+        bytesize=serial.EIGHTBITS,
+        parity=serial.PARITY_NONE,
+        stopbits=serial.STOPBITS_ONE,
+        timeout=1
+    )
+   
     while running:
         # Draw maze and player with AI trace and guide AI
         draw_maze(window, maze, player_pos, guide_pos, path[:path_index], goal)
- 
+        send_maze(maze, player_pos, path, ser)
         # Check for quit event and key presses for player movement
         moved = False
         for event in pygame.event.get():
@@ -198,7 +210,7 @@ def main():
         if moved:
              last_move_time = time.time()
         if time.time() - last_move_time > 20:
-            
+           
             path_index = len(path)
  
         # Update guide AI position along the path
