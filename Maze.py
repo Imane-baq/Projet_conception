@@ -17,7 +17,7 @@ PLAYER_COLOR = (30, 144, 255)  # Dodger Blue for the player
 TRACE_COLOR = (173, 216, 230)  # Light Blue for AI trace
 GOAL_COLOR = (220, 20, 60)  # Crimson for the goal
 GUIDE_COLOR = (255, 215, 0)  # Gold for the guide AI
-NUMERO_COM = "3"
+NUMERO_COM = "4"
  
  
 # ser = serial.Serial(
@@ -130,7 +130,17 @@ def send_maze(maze, player_pos, path, ser):
                 ser.write("M".encode("utf-8"))
             elif(val_colonne == ' '):
                 ser.write('0'.encode("utf-8"))
-        ser.write('N'.encode("utf-8"))
+        # ser.write('N'.encode("utf-8"))
+ 
+def receive_directions(ser):
+    compteur = 0
+    directions = []
+    while compteur < 8:
+        if ser.in_waiting > 0:
+            byte_data = ser.read(1)
+            compteur += 1
+            directions[compteur] = byte_data
+    return directions
  
 def check_Ai_Path(maze_pos, path):
     for i in path:
@@ -170,10 +180,13 @@ def main():
         stopbits=serial.STOPBITS_ONE,
         timeout=1
     )
+ 
+    directions = []
    
     while running:
         # Draw maze and player with AI trace and guide AI
         draw_maze(window, maze, player_pos, guide_pos, path[:path_index], goal)
+        #directions = receive_directions(ser)
         send_maze(maze, player_pos, path, ser)
         # Check for quit event and key presses for player movement
         moved = False
