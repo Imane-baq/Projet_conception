@@ -186,27 +186,46 @@ def main():
     while running:
         # Draw maze and player with AI trace and guide AI
         draw_maze(window, maze, player_pos, guide_pos, path[:path_index], goal)
-        #directions = receive_directions(ser)
+        directions = receive_directions(ser)
         send_maze(maze, player_pos, path, ser)
         # Check for quit event and key presses for player movement
         moved = False
+        #for event in pygame.event.get():
+        #    if event.type == pygame.QUIT:
+        #        running = False
+        #    elif event.type == pygame.KEYDOWN:
+        #        if event.key == pygame.K_w:
+        #            player_pos = move_player(player_pos, 'up', maze)
+        #            moved = True
+        #        elif event.key == pygame.K_s:
+        #            player_pos = move_player(player_pos, 'down', maze)
+        #            moved = True
+        #        elif event.key == pygame.K_a:
+        #            player_pos = move_player(player_pos, 'left', maze)
+        #            moved = True
+        #        elif event.key == pygame.K_d:
+        #            player_pos = move_player(player_pos, 'right', maze)
+        #            moved = True
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_w:
-                    player_pos = move_player(player_pos, 'up', maze)
-                    moved = True
-                elif event.key == pygame.K_s:
-                    player_pos = move_player(player_pos, 'down', maze)
-                    moved = True
-                elif event.key == pygame.K_a:
-                    player_pos = move_player(player_pos, 'left', maze)
-                    moved = True
-                elif event.key == pygame.K_d:
-                    player_pos = move_player(player_pos, 'right', maze)
-                    moved = True
- 
+        if directions == "00000000":
+            player_pos = move_player(player_pos, 'up', maze)
+            moved = True
+        elif directions == "000000001":
+            player_pos = move_player(player_pos, 'down', maze)
+            moved = True
+        elif directions == "00000010":
+            player_pos = move_player(player_pos, 'left', maze)
+            moved = True
+        elif directions == "00000011":
+            player_pos = move_player(player_pos, 'right', maze)
+            moved = True
+        #Si bug, bug here
+            
+
+
         # Check if player moved and update last_move_time
         #### THE PROB IS here we need tho update the maze.
         # if moved:
